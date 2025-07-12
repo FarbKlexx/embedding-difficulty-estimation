@@ -1,7 +1,7 @@
 # embedding-difficulty-estimation
 This repository contains the source code for my (Adrian Uhe) bachelor thesis.
 ## Setup
-After cloning the repository, to install all required dependencies execute:
+After cloning the repository (and I recommend to create a new environment), to install all required dependencies execute:
 ```
 pip install -r requirements.txt
 ```
