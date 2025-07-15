@@ -1,6 +1,9 @@
 # embedding-difficulty-estimation
 This repository contains the source code for my (Adrian Uhe) bachelor thesis.
 ## Setup
+> [!NOTE]
+> To correctly pull all the files it is recommended to install git-lfs. More information about that on https://git-lfs.com/.
+
 After cloning the repository (and I recommend to create a new environment), to install all required dependencies execute:
 ```
 pip install -r requirements.txt
