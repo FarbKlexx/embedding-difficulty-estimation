@@ -3,12 +3,15 @@ This file handles loading of the following datasets
 - medicine: USMLE MCQs from BEA 2024 Shared Task Data (BEA_2024.csv)
 - math: MCQs from the NeurIPS 2020 Education Challenge (NeurIPS_2020.csv)
 - trivial: MCQs from the OpenTriviaQA (for-kids.txt, science-technology.txt)
+- language: Translation Tasks from the Duolingo Dataverse Half-Life Regression (learning_traces.13m.csv)
 '''
 
 import csv
 import os
 import numpy as np
-import re
+from collections import defaultdict
+
+# Dynamic System Paths to the raw datasets
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PATH_BEA_2024 = os.path.join(BASE_DIR,'raw', 'BEA_2024.csv')
@@ -17,6 +20,9 @@ PATH_TRIVIAL_HARD = os.path.join(BASE_DIR,'raw', 'trivial', 'science-technology.
 PATH_MATH = os.path.join(BASE_DIR,'raw', 'math', 'NeurIPS_2020.csv')
 PATH_MATH_TRAIN_1 = os.path.join(BASE_DIR,'raw', 'math', 'train_task_1_2.csv')
 PATH_MATH_TRAIN_2 = os.path.join(BASE_DIR,'raw', 'math', 'train_task_3_4.csv')
+PATH_LANGUAGE = os.path.join(BASE_DIR,'raw', 'language', 'learning_traces.13m.csv')
+
+# Define all loading functions for the datasets
 
 def load_medicine() -> list[list]:
     """
@@ -72,6 +78,7 @@ def load_math() -> list[list]:
     
     data = []
 
+    print("Loading Dataset...")
     with open(PATH_MATH, newline='', encoding='utf-8') as csvfile:
         counter = 1
         reader = csv.reader(csvfile, delimiter=';')
@@ -253,6 +260,55 @@ def load_trivial() -> list[list]:
     final = final_easy + final_hard
     print("\n")
     return final
+
+# TODO Finish this pipeline
+def load_language() -> list[list]:
+    """
+    Handles loading of a language translation dataset from Duolingo Dataverse Half-Life Regression
+    Returns
+    -------
+    list of list
+        A list where each element is a list containing:
+        - question (str): The question.
+        - choices (list of str): All possible answer choices.
+        - correct_choice (str): The correct choice.
+        - difficulty (float): The empirical calculated difficulty for this exam item.
+    """
+
+    data = []
+
+    id_difficulty = defaultdict(lambda: [0, 0]) # default factory 0
+    id_question = defaultdict()
+
+    print("Loading dataset...")
+    with open(PATH_LANGUAGE, newline='') as csvfile:
+        reader = csv.reader(csvfile, delimiter=';')
+        next(reader) 
+
+        for row in reader:
+            task_id = row[6]
+            question = row[7]
+            id_question[task_id] = question
+            seen = int(row[8])
+            correct = int(row[9])
+            id_difficulty[task_id][0] += seen
+            id_difficulty[task_id][1] += correct
+
+    task_difficulties = defaultdict()
+    for task_id, (seen_total, correct_total) in id_difficulty.items():
+        difficulty = correct_total / seen_total
+        task_difficulties[task_id] = difficulty
+    
+    for task_id, difficulty in task_difficulties.items():
+        data_entry = [id_question[task_id], [], "", difficulty]
+        data.append(data_entry)
+    
+    print(f'Dataset contains {len(data)} rows.')
+    print("\n")
+
+    return data
+
+# Data Analysis Functions
 
 def analyze_dataset(data: list):
     print("Analyze Dataset...")

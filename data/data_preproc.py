@@ -34,16 +34,25 @@ def get_detailed_input(data: list[list], task: str) -> list[str]:
     for row in data:
         question = row[0]
         choices = row[1]
+        
         correct_choice = row[2]
+        correct_choice_prefix = "\nCorrect Choice: "
+        if correct_choice == "":
+            correct_choice_prefix = ""
         
         choices_string = ''
-        choice_count = 0
-        for choice in choices:
-            choices_string = choices_string + CHOICE_PREFIX[choice_count] + choice
-            choice_count += 1
+        if len(choices) != 0:
+            choice_count = 0
+            for choice in choices:
+                choices_string = choices_string + CHOICE_PREFIX[choice_count] + choice
+                choice_count += 1
+
             
-        detailed_input = question + "\n" + choices_string + "\nCorrect Choice: " + correct_choice
+        detailed_input = question + "\n" + choices_string + correct_choice_prefix + correct_choice
         detailed_inputs.append(get_detailed_instruct(task, detailed_input))
+    
+    for di in detailed_inputs:
+        print(di)
     
     print("\n")
     return detailed_inputs

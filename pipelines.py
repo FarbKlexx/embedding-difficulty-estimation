@@ -63,7 +63,25 @@ def math(task: str):
     '''
     return
 
-# TODO finish concat pipeline
+def language(task: str):
+    print("------- Started Language Pipeline -------")
+    data = ds.load_language()
+
+    ds.analyze_dataset(data)
+    preproc_data = preproc.get_detailed_input(data, task)
+
+    embeddings = methods.e5_embed(preproc_data)
+    
+    X,y = preproc.create_embedding_difficulty_tuple(embeddings, data)
+    
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+    
+    reg = Ridge(alpha=0.1).fit(X_train, y_train)
+    y_pred = reg.predict(X_test)
+    methods.test_regressor(y_test, y_pred)
+    
+
+# TODO add this to the other pipelines
 def concat(task: str):
     
     # pipeline should be the same but preproc differs
