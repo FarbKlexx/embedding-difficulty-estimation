@@ -10,6 +10,9 @@ import csv
 import os
 import numpy as np
 from collections import defaultdict
+import pandas as pd
+import matplotlib.pyplot as plt
+import re
 
 # Dynamic System Paths to the raw datasets
 
@@ -261,7 +264,6 @@ def load_trivial() -> list[list]:
     print("\n")
     return final
 
-# TODO Finish this pipeline
 def load_language() -> list[list]:
     """
     Handles loading of a language translation dataset from Duolingo Dataverse Half-Life Regression
@@ -277,39 +279,58 @@ def load_language() -> list[list]:
 
     data = []
 
-    id_difficulty = defaultdict(lambda: [0, 0]) # default factory 0
-    id_question = defaultdict()
+    id_difficulty = defaultdict(lambda: [0, 0])
+    userID_taskID_seen_and_correct = dict()
+    id_question = dict()
 
     print("Loading dataset...")
     with open(PATH_LANGUAGE, newline='') as csvfile:
         reader = csv.reader(csvfile, delimiter=';')
-        next(reader) 
+        next(reader)
 
         for row in reader:
+            learning_language = row[4]
+            if learning_language != "de": # reduce data complexity by only using german words
+                continue
+            user_id = row[3]
             task_id = row[6]
             question = row[7]
-            id_question[task_id] = question
             seen = int(row[8])
             correct = int(row[9])
-            id_difficulty[task_id][0] += seen
-            id_difficulty[task_id][1] += correct
+            id_question[task_id] = question
+            
+            entry_key = (user_id, task_id)
+            
+            # check whether or not entry already exists, if not create entry, if the seen in total amount of the new value is greater than the existing one update entry
+            if entry_key not in userID_taskID_seen_and_correct or seen > userID_taskID_seen_and_correct[(user_id, task_id)][0]:
+                userID_taskID_seen_and_correct[(user_id, task_id)] = (seen,correct)
+    
+    # count how often an item has been seen totally and correctly answered across all users
+    for (user_id, task_id), (seen, correct) in userID_taskID_seen_and_correct.items():
+        id_difficulty[task_id][0] += seen
+        id_difficulty[task_id][1] += correct
 
-    task_difficulties = defaultdict()
+    # calculate the proportion of the correct answers to seen in total
+    task_difficulties = dict()
     for task_id, (seen_total, correct_total) in id_difficulty.items():
         difficulty = correct_total / seen_total
         task_difficulties[task_id] = difficulty
     
+    # format data
     for task_id, difficulty in task_difficulties.items():
         data_entry = [id_question[task_id], [], "", difficulty]
         data.append(data_entry)
     
-    print(f'Dataset contains {len(data)} rows.')
+    # remove <Tags> in the question entries
+    for d in data:
+        cleaned = re.sub(r"<[^<>]*>", "", d[0])
+        d[0] = cleaned
+    
     print("\n")
 
     return data
 
 # Data Analysis Functions
-
 def analyze_dataset(data: list):
     print("Analyze Dataset...")
     print(f'Dataset contains {len(data)} rows.')
@@ -322,4 +343,35 @@ def analyze_dataset(data: list):
     print(f"Maximum Difficulty: {max(difficulties)}")
     print(f"Mean Difficulty: {np.mean(difficulties)}")
     print("\n")
+    return
+
+def analyse_training_data(y_train: list):
+    
+    # # Defining the fonts before plotting:
+    plt.rcParams.update({
+        'font.family': 'Courier New',  # monospace font
+        'font.size': 20,
+        'axes.titlesize': 20,
+        'axes.labelsize': 20,
+        'xtick.labelsize': 20,
+        'ytick.labelsize': 20,
+        'legend.fontsize': 20,
+        'figure.titlesize': 20
+    }) 
+    
+    fig, ax = plt.subplots(figsize=(10, 10))
+    
+    ax.grid(True, which='major', linestyle='-', linewidth=0.75, alpha=0.25)
+    
+    ax.minorticks_on()
+    ax.grid(True, which='minor', linestyle='-', linewidth=0.25, alpha=0.15)
+    
+    ax.set_axisbelow(True) # <-- Ensure grid is below data
+    
+    plt.title('Difficulty Distribution')
+    ax.set_xlabel('Difficulty')
+    ax.set_ylabel('Amount')
+    
+    plt.hist(y_train, bins=100)
+    plt.show()
     return

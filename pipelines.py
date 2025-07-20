@@ -4,6 +4,9 @@ import methods as methods
 from utils.loggingUtils import print_X_y
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import Ridge
+from sklearn.model_selection import GridSearchCV
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.neural_network import MLPRegressor
 
 def bea_reproduction(task: str):
     print("------- BEA Reproduction Pipeline -------")
@@ -18,6 +21,8 @@ def bea_reproduction(task: str):
     # print_X_y(X,y)
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+    
+    ds.analyse_training_data(y_train)
     
     reg = Ridge(alpha=0.1).fit(X_train, y_train)
     y_pred = reg.predict(X_test)
@@ -36,6 +41,8 @@ def trivial(task: str):
     # print_X_y(X,y)
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+    
+    ds.analyse_training_data(y_train)
     
     reg = Ridge(alpha=0.1).fit(X_train, y_train)
     y_pred = reg.predict(X_test)
@@ -75,12 +82,19 @@ def language(task: str):
     X,y = preproc.create_embedding_difficulty_tuple(embeddings, data)
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+
+    ds.analyse_training_data(y_train)
+
+    # Regression Model
+    reg = MLPRegressor(random_state=1, max_iter=2000, tol=0.1)
+
+    reg.fit(X_train, y_train)
     
-    reg = Ridge(alpha=0.1).fit(X_train, y_train)
     y_pred = reg.predict(X_test)
+    
+    #y_pred = reg.predict(X_test)
     methods.test_regressor(y_test, y_pred)
     
-
 # TODO add this to the other pipelines
 def concat(task: str):
     

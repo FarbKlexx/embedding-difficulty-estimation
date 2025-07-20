@@ -51,9 +51,6 @@ def get_detailed_input(data: list[list], task: str) -> list[str]:
         detailed_input = question + "\n" + choices_string + correct_choice_prefix + correct_choice
         detailed_inputs.append(get_detailed_instruct(task, detailed_input))
     
-    for di in detailed_inputs:
-        print(di)
-    
     print("\n")
     return detailed_inputs
 

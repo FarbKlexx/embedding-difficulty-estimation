@@ -159,10 +159,10 @@ def test_regressor(y_test: list, y_pred: list) -> tuple:
             zorder = 2 # use the z-order to force scatter to be displayed over lines
     )
     
-    mean = np.mean(y_test)
+    mean_pred = np.mean(y_pred)
     
-    plt.axhline(y=mean,
-            label="Mean",
+    plt.axhline(y=mean_pred,
+            label="Mean of estimated Values",
             linewidth = 2.6,
             color = mean_color,
             zorder = 2 # use the z-order to force scatter to be displayed over lines
@@ -181,7 +181,7 @@ def test_regressor(y_test: list, y_pred: list) -> tuple:
     
     plt.title('Comparison of Predicted Difficulty')
     plt.xlabel('Actual Difficulty')
-    plt.ylabel('Predicted Difficulty')
+    plt.ylabel('Estimated Difficulty')
     plt.show()
     
     return rmse,r2
