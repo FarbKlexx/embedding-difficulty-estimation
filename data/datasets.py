@@ -17,7 +17,7 @@ import re
 # Dynamic System Paths to the raw datasets
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-PATH_BEA_2024 = os.path.join(BASE_DIR,'raw', 'BEA_2024.csv')
+PATH_BEA_2024 = os.path.join(BASE_DIR,'raw', 'bea', 'BEA_2024.csv')
 PATH_TRIVIAL_EASY = os.path.join(BASE_DIR,'raw', 'trivial', 'for-kids.txt')
 PATH_TRIVIAL_HARD = os.path.join(BASE_DIR,'raw', 'trivial', 'science-technology.txt')
 PATH_MATH = os.path.join(BASE_DIR,'raw', 'math', 'NeurIPS_2020.csv')
@@ -79,7 +79,9 @@ def load_math() -> list[list]:
         - difficulty (float): The empirical calculated difficulty for this exam item.
     """
     
-    data = []
+    # this whole part is very inelegant, but it works regardless #
+    
+    temp_1 = []
 
     print("Loading Dataset...")
     with open(PATH_MATH, newline='', encoding='utf-8') as csvfile:
@@ -89,14 +91,14 @@ def load_math() -> list[list]:
         for row in reader:
             if (first_row == False):
                 new_row = [row[3], row[4], row[5]]
-                data.append(new_row)
+                temp_1.append(new_row)
             if (counter == 256): # only the first 254 rows are properly preprocessed
                 break
             counter += 1
             first_row = False
     
-    final_data = []
-    for d in data:
+    temp_2 = []
+    for d in temp_1:
         id = d[0]
         choices_text = d[1]
         question = d[2]
@@ -112,13 +114,11 @@ def load_math() -> list[list]:
         
             if (choices[0] != '' and choices[1] != '' and choices[2] != '' and choices[3] != ''):
                 temp_entry = [id, question, choices] 
-                final_data.append(temp_entry)
-                
-    ### Extract only the significant rows, by checking wheter or not the QuestionId is existing ###
+                temp_2.append(temp_entry)
 
     temp = []
     row_counter = 0
-    for row in final_data:
+    for row in temp_2:
         if row_counter == 0:
             row_counter += 1
             continue
@@ -149,8 +149,6 @@ def load_math() -> list[list]:
                 essential_user_data.append(row)
     question_stats = []
 
-    ## QuestionId (0), UserId (1), AnswerId (2), IsCorrect (3), CorrectAnswer (4), AnswerValue (5) ##
-
     question_ids = sorted(set(row[0] for row in essential_user_data))
 
     for id in question_ids:
@@ -163,8 +161,6 @@ def load_math() -> list[list]:
                 answered_in_total += 1
                 answered_correctly += int(row[3])
         question_stats.append([id, answered_correctly, answered_in_total, correct_answer])
-        
-    # Add the correct answer to the final data
     
     correct_choices = {}
     p_values = {}
@@ -174,11 +170,21 @@ def load_math() -> list[list]:
         p_values[stat[0]] = round(item_difficulty,2)
         correct_choices[stat[0]] = stat[3]
 
-    print(correct_choices)
-    print(p_values)
+    data = []
+
+    for i in temp_2:
+        q_id = i[0]
+        if q_id not in correct_choices or q_id not in p_values:
+            continue
+        question_string = i[1]
+        possible_choices = i[2]
+        correct_choice_idx = int(correct_choices[q_id]) - 1
+        difficulty = p_values[q_id]
+        
+        data_entry = [question_string, possible_choices, possible_choices[correct_choice_idx], difficulty]
+        data.append(data_entry)
     
-    ## Calculate the p-value for each question ##
-    return
+    return data
 
 def trivial_helper(lines: list, difficulty: float) -> list:
     
@@ -282,6 +288,7 @@ def load_language() -> list[list]:
     id_difficulty = defaultdict(lambda: [0, 0])
     userID_taskID_seen_and_correct = dict()
     id_question = dict()
+    id_amount_of_data = defaultdict(lambda: 0)
 
     print("Loading dataset...")
     with open(PATH_LANGUAGE, newline='') as csvfile:
@@ -307,6 +314,7 @@ def load_language() -> list[list]:
     
     # count how often an item has been seen totally and correctly answered across all users
     for (user_id, task_id), (seen, correct) in userID_taskID_seen_and_correct.items():
+        id_amount_of_data[task_id] += 1
         id_difficulty[task_id][0] += seen
         id_difficulty[task_id][1] += correct
 
@@ -316,21 +324,30 @@ def load_language() -> list[list]:
         difficulty = correct_total / seen_total
         task_difficulties[task_id] = difficulty
     
+    '''
+    # remove entries that have only 1,2 or 3 entries throughout
+    for id, i in id_amount_of_data.items():
+        if i == 1:
+            del task_difficulties[id]
+    '''
+    
     # format data
     for task_id, difficulty in task_difficulties.items():
-        data_entry = [id_question[task_id], [], "", difficulty]
-        data.append(data_entry)
+        if difficulty <= 1:
+            data_entry = [id_question[task_id], [], "", difficulty]
+            data.append(data_entry)
     
     # remove <Tags> in the question entries
     for d in data:
         cleaned = re.sub(r"<[^<>]*>", "", d[0])
         d[0] = cleaned
-    
+            
     print("\n")
 
     return data
 
 # Data Analysis Functions
+
 def analyze_dataset(data: list):
     print("Analyze Dataset...")
     print(f'Dataset contains {len(data)} rows.')
