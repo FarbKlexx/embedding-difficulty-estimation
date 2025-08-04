@@ -280,7 +280,7 @@ def load_language() -> list[list]:
         - question (str): The question.
         - choices (list of str): All possible answer choices.
         - correct_choice (str): The correct choice.
-        - difficulty (float): The empirical calculated difficulty for this exam item.
+        - difficulty (float): The calculated difficulty for this exam item.
     """
 
     data = []

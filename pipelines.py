@@ -73,6 +73,16 @@ def language(task: str):
     print("------- Started Language Pipeline -------")
     data = ds.load_language()
 
+    # side step to train a regression model over the word length
+
+    X_wl, y_wl = methods.word_length(data)
+
+    X_train_wl, X_test_wl, y_train_wl, y_test_wl = train_test_split(X_wl, y_wl, test_size=0.2, random_state=0)
+
+    reg = Ridge(alpha=0.1).fit(X_train_wl, y_train_wl)
+    y_pred_wl = reg.predict(X_test_wl)
+    methods.test_regressor(y_test_wl, y_pred_wl)
+
     ds.analyze_dataset(data)
     preproc_data = preproc.get_detailed_input(data, task)
 
@@ -92,4 +102,5 @@ def language(task: str):
 def concat(task: str):
     
     # pipeline should be the same but preproc differs
+
     return

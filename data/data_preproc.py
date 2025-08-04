@@ -18,7 +18,7 @@ def get_detailed_input(data: list[list], task: str) -> list[str]:
         - question (str): The exam question.
         - choices (list of str): All possible answer choices.
         - correct_choice (str): The correct choice.
-        - difficulty (float): The empirical calculated difficulty for this exam item.
+        - difficulty (float): The calculated difficulty for this exam item.
     task: str
         A short one-sentence description of the task for the embedding model
         
