@@ -76,7 +76,7 @@ def baseline_regressor(y_train: list, y_test: list) -> float:
     
     return rmse
 
-def test_regressor(y_test: list, y_pred: list) -> tuple:
+def test_regressor(file_prefix: str, y_test: list, y_pred: list) -> tuple:
     """
     Outputs the RMSE and R2-Score for the regressor
 
@@ -182,6 +182,10 @@ def test_regressor(y_test: list, y_pred: list) -> tuple:
     plt.title('Comparison of Predicted Difficulty')
     plt.xlabel('Actual Difficulty')
     plt.ylabel('Estimated Difficulty')
-    plt.show()
     
+    filename = f"{file_prefix}-estimated-actual.svg"
+    
+    plt.savefig(filename, format="svg")
+    
+    plt.show()
     return rmse,r2

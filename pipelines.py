@@ -22,11 +22,11 @@ def bea_reproduction(task: str):
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
     
-    ds.analyse_training_data(y_train)
+    ds.analyse_training_data("bea", y_train)
     
     reg = Ridge(alpha=0.1).fit(X_train, y_train)
     y_pred = reg.predict(X_test)
-    methods.test_regressor(y_test, y_pred)
+    methods.test_regressor("bea", y_test, y_pred)
     return
 
 def trivial(task: str):
@@ -41,11 +41,11 @@ def trivial(task: str):
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
     
-    ds.analyse_training_data(y_train)
+    ds.analyse_training_data("trivial", y_train)
     
     reg = Ridge(alpha=0.1).fit(X_train, y_train)
     y_pred = reg.predict(X_test)
-    methods.test_regressor(y_test, y_pred)
+    methods.test_regressor("trivial", y_test, y_pred)
     return
 
 def math(task: str):
@@ -61,11 +61,11 @@ def math(task: str):
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
     
-    ds.analyse_training_data(y_train)
+    ds.analyse_training_data("math", y_train)
     
     reg = Ridge(alpha=0.1).fit(X_train, y_train)
     y_pred = reg.predict(X_test)
-    methods.test_regressor(y_test, y_pred)
+    methods.test_regressor("math", y_test, y_pred)
     
     return
 
@@ -82,11 +82,11 @@ def language(task: str):
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
 
-    ds.analyse_training_data(y_train)
+    ds.analyse_training_data("language", y_train)
 
     reg = Ridge(alpha=0.1).fit(X_train, y_train)
     y_pred = reg.predict(X_test)
-    methods.test_regressor(y_test, y_pred)
+    methods.test_regressor("language", y_test, y_pred)
     
 # TODO add this to the other pipelines
 def concat(task: str):

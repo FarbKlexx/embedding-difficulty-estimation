@@ -362,7 +362,7 @@ def analyze_dataset(data: list):
     print("\n")
     return
 
-def analyse_training_data(y_train: list):
+def analyse_training_data(file_prefix: str, y_train: list):
     
     # # Defining the fonts before plotting:
     plt.rcParams.update({
@@ -390,5 +390,10 @@ def analyse_training_data(y_train: list):
     ax.set_ylabel('Amount')
     
     plt.hist(y_train, bins=100)
+    
+    filename = f"{file_prefix}-difficulty-distribution.svg"
+    
+    plt.savefig(filename, format="svg")
+    
     plt.show()
     return
