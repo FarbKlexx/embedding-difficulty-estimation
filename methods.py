@@ -185,3 +185,18 @@ def test_regressor(y_test: list, y_pred: list) -> tuple:
     plt.show()
     
     return rmse,r2
+
+def word_length(data: list) -> tuple:
+    X = []
+    y = []
+
+    for i in data:
+        task = i[0]
+        length = len(task)
+        difficulty = i[3]
+        X.append(length)
+        y.append(difficulty)
+
+    X_np = np.array(X).reshape(-1, 1)
+
+    return X_np,y
