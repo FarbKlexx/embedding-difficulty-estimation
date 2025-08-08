@@ -353,8 +353,13 @@ def analyze_dataset(data: list):
     print(f'Dataset contains {len(data)} rows.')
     
     difficulties = []
+    greater_than_1 = 0
     for q in data:
         difficulties.append(q[3])
+        if q[3] > 1:
+            greater_than_1 += 1
+    
+    print(f"Greater than 1: {greater_than_1}")
     
     print(f"Minimum Difficulty: {min(difficulties)}")
     print(f"Maximum Difficulty: {max(difficulties)}")

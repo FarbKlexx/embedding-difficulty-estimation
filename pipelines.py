@@ -81,7 +81,7 @@ def language(task: str):
 
     reg = Ridge(alpha=0.1).fit(X_train_wl, y_train_wl)
     y_pred_wl = reg.predict(X_test_wl)
-    methods.test_regressor(y_test_wl, y_pred_wl)
+    methods.test_regressor("language", y_test_wl, y_pred_wl)
 
     ds.analyze_dataset(data)
     preproc_data = preproc.get_detailed_input(data, task)
