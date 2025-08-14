@@ -397,8 +397,10 @@ def analyse_training_data(file_prefix: str, y_train: list):
     plt.hist(y_train, bins=100)
     
     filename = f"{file_prefix}-difficulty-distribution.svg"
-    
-    plt.savefig(filename, format="svg")
+
+    PATH = os.path.join("img", filename)
+
+    plt.savefig(PATH, format="svg")
     
     plt.show()
     return

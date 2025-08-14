@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize, LinearSegmentedColormap
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import matplotlib as mpl
+import os
 
 def e5_embed(data: list[str]) -> list:
     """
@@ -185,7 +186,9 @@ def test_regressor(file_prefix: str, y_test: list, y_pred: list) -> tuple:
     
     filename = f"{file_prefix}-estimated-actual.svg"
     
-    plt.savefig(filename, format="svg")
+    PATH = os.path.join("img", filename)
+
+    plt.savefig(PATH, format="svg")
     
     plt.show()
     return rmse,r2
