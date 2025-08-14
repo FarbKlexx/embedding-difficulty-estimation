@@ -20,6 +20,15 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import matplotlib as mpl
 import os
 
+if torch.cuda.is_available():
+    print("Cuda is available. Calculate embeddings on GPU...\n")
+    _DEVICE = "cuda"
+else:
+    print("Cuda is unavailable. Calculate embeddings on CPU...\n")
+    _DEVICE = "cpu"
+
+_MODEL = SentenceTransformer("intfloat/multilingual-e5-large-instruct", device=_DEVICE)
+
 def e5_embed(data: list[str]) -> list:
     """
     Handles the e5 embedding process
@@ -34,14 +43,7 @@ def e5_embed(data: list[str]) -> list:
     list
         - The embeddings
     """
-    if (torch.cuda.is_available()):
-        print("Cuda is available. Calculate embeddings on gpu...")
-        model = SentenceTransformer('intfloat/multilingual-e5-large-instruct', device='cuda')
-    else:
-        print("Cuda is unavailable. Calculate embeddings on cpu...")
-        model = SentenceTransformer('intfloat/multilingual-e5-large-instruct')
-
-    embeddings = model.encode(data, convert_to_tensor=True, normalize_embeddings=True)
+    embeddings = _MODEL.encode(data, convert_to_tensor=True, normalize_embeddings=True)
     embeddings = embeddings.cpu()
 
     print(f'Embedded {len(embeddings)} items.')

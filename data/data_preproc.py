@@ -27,7 +27,6 @@ def get_detailed_input(data: list[list], task: str) -> list[str]:
     list of str
         A list where each element is a String representing the text to be embedded
     """
-    print("Preprocessing Data...")
     
     detailed_inputs = []
     

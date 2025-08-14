@@ -263,8 +263,8 @@ def load_trivial() -> list[list]:
             lines_hard.append(line)
             hard_count += 1
     
-    final_easy = trivial_helper(lines_easy, -1)
-    final_hard = trivial_helper(lines_hard, 1)
+    final_easy = trivial_helper(lines_easy, 1)
+    final_hard = trivial_helper(lines_hard, 0)
     
     final = final_easy + final_hard
     print("\n")
