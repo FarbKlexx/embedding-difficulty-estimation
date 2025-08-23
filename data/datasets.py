@@ -61,7 +61,6 @@ def load_medicine() -> list[list]:
                 difficulty = float(row[16].replace(",",".")) # convert the difficulty from string to float
                 data.append([question, choices, correct_choice, difficulty])
             first_row = False
-    print(f'Dataset contains {len(data)} rows.')
     print("\n")
     return data
 
@@ -324,12 +323,10 @@ def load_language() -> list[list]:
         difficulty = correct_total / seen_total
         task_difficulties[task_id] = difficulty
     
-    '''
     # remove entries that have only 1,2 or 3 entries throughout
     for id, i in id_amount_of_data.items():
         if i == 1:
             del task_difficulties[id]
-    '''
     
     # format data
     for task_id, difficulty in task_difficulties.items():

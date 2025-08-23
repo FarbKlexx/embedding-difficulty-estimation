@@ -2,18 +2,18 @@ import data.datasets as ds
 import data.data_preproc as preproc
 import methods as methods
 from utils.loggingUtils import print_X_y
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, KFold, cross_val_predict
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import Ridge
 from sklearn.model_selection import GridSearchCV
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.neural_network import MLPRegressor
 from sklearn.metrics import root_mean_squared_error
 from sklearn.metrics import r2_score
+from sklearn.pipeline import make_pipeline
 import numpy as np
 
 
-def bea_reproduction(determine_best_instruct = False):
+def bea_reproduction(determine_best_instruct = False, concat = False):
     print("------- BEA Reproduction Pipeline -------")
 
     data = ds.load_medicine()
@@ -74,45 +74,71 @@ def bea_reproduction(determine_best_instruct = False):
 
     # Best Regressor
 
-    results = []
-
-    preproc_data = preproc.get_detailed_input(data, best_instruct)
-    embeddings = methods.e5_embed(preproc_data)
+    if (concat == False):
+        preproc_data = preproc.get_detailed_input(data, best_instruct)
+        embeddings = methods.e5_embed(preproc_data)
+    else:
+        preproc_data = preproc.get_detailed_input_concat(data, best_instruct)
+        embeddings = methods.e5_embed_concat(preproc_data)
     X,y = preproc.create_embedding_difficulty_tuple(embeddings, data)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+
+    cv = KFold(n_splits=5, shuffle=True, random_state=42)
+
+    filename = "usmle"
+    if(concat):
+        filename = "usmle_concat"
 
     ds.analyse_training_data("usmle", y_train)
     
     # Linear Regression
-    linear = LinearRegression().fit(X_train, y_train)
-    y_pred_linear = linear.predict(X_test)
-    rmse_linear = root_mean_squared_error(y_test, y_pred_linear)
-
-    results.append(("Linear Regression", rmse_linear, y_pred_linear))
+    models = []
+    linear = make_pipeline(LinearRegression())
 
     # Ridge Regression
-    ridge = Ridge().fit(X_train, y_train)
-    y_pred_ridge = ridge.predict(X_test)
-    rmse_ridge = root_mean_squared_error(y_test, y_pred_ridge)
+    ridge_grid = {
+        'ridge__alpha': [0.000001, 0.00001, 0.0001, 0.1]
+    }
 
-    results.append(("Ridge Regression", rmse_ridge, y_pred_ridge))
+    ridge = GridSearchCV(make_pipeline(Ridge()), ridge_grid, cv=cv, scoring="neg_root_mean_squared_error")
 
-    # RandomForest Regression
-    random_forest = RandomForestRegressor().fit(X_train, y_train)
-    y_pred_random_forest = random_forest.predict(X_test)
-    rmse_random_forest = root_mean_squared_error(y_test, y_pred_random_forest)
+    # Random Forest Regression
+    random_forest_grid = {
+        'randomforestregressor__n_estimators': [10, 20, 30, 50, 100, 200]
+    }
 
-    results.append(("RandomForest Regression", rmse_random_forest, y_pred_random_forest))
+    random_forest = GridSearchCV(make_pipeline(RandomForestRegressor(n_jobs=-1)), random_forest_grid , cv=cv, scoring="neg_root_mean_squared_error")
+
+    models.append(linear)
+    models.append(ridge)
+    models.append(random_forest)
+
+    results = []
+
+    for model in models:
+        model.fit(X, y)
+
+        if isinstance(model, GridSearchCV):
+            name = model.best_estimator_.steps[-1][0]
+            params = model.best_params_
+            y_pred = cross_val_predict(model.best_estimator_, X, y, cv=cv, n_jobs=-1)
+        else:
+            name = model.steps[-1][0]
+            params = None
+            y_pred = cross_val_predict(model, X, y, cv=cv, n_jobs=-1)
+
+        rmse = root_mean_squared_error(y, y_pred)
+        results.append((name, rmse, params, y_pred))
 
     for r in results:
-        print(f"RMSE of {r[0]}: {r[1]}")
+        print(f"RMSE of {r[0]}: {r[1]}. Best Params: {r[2]}")
 
     best = min(results, key=lambda r: r[1])
 
-    methods.test_regressor("usmle", y_test, best[2])
+    methods.test_regressor(filename, y, best[3])
     return
 
-def trivial(determine_best_instruct = False):
+def trivial(determine_best_instruct = False, concat = False):
     print("------- Started Trivial Pipeline -------")
 
     data = ds.load_trivial()
@@ -174,43 +200,71 @@ def trivial(determine_best_instruct = False):
 
     results = []
 
-    preproc_data = preproc.get_detailed_input(data, best_instruct)
-    embeddings = methods.e5_embed(preproc_data)
+    if (concat == False):
+        preproc_data = preproc.get_detailed_input(data, best_instruct)
+        embeddings = methods.e5_embed(preproc_data)
+    else:
+        preproc_data = preproc.get_detailed_input_concat(data, best_instruct)
+        embeddings = methods.e5_embed_concat(preproc_data)
     X,y = preproc.create_embedding_difficulty_tuple(embeddings, data)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+
+    cv = KFold(n_splits=5, shuffle=True, random_state=42)
+
+    filename = "trivial"
+    if(concat):
+        filename = "trivial_concat"
 
     ds.analyse_training_data("trivial", y_train)
     
     # Linear Regression
-    linear = LinearRegression().fit(X_train, y_train)
-    y_pred_linear = linear.predict(X_test)
-    rmse_linear = root_mean_squared_error(y_test, y_pred_linear)
-
-    results.append(("Linear Regression", rmse_linear, y_pred_linear))
+    models = []
+    linear = make_pipeline(LinearRegression())
 
     # Ridge Regression
-    ridge = Ridge().fit(X_train, y_train)
-    y_pred_ridge = ridge.predict(X_test)
-    rmse_ridge = root_mean_squared_error(y_test, y_pred_ridge)
+    ridge_grid = {
+        'ridge__alpha': [0.000001, 0.00001, 0.0001, 0.1]
+    }
 
-    results.append(("Ridge Regression", rmse_ridge, y_pred_ridge))
+    ridge = GridSearchCV(make_pipeline(Ridge()), ridge_grid, cv=cv, scoring="neg_root_mean_squared_error")
 
-    # RandomForest Regression
-    random_forest = RandomForestRegressor().fit(X_train, y_train)
-    y_pred_random_forest = random_forest.predict(X_test)
-    rmse_random_forest = root_mean_squared_error(y_test, y_pred_random_forest)
+    # Random Forest Regression
+    random_forest_grid = {
+        'randomforestregressor__n_estimators': [10, 20, 30, 50, 100, 200]
+    }
 
-    results.append(("RandomForest Regression", rmse_random_forest, y_pred_random_forest))
+    random_forest = GridSearchCV(make_pipeline(RandomForestRegressor(n_jobs=-1)), random_forest_grid , cv=cv, scoring="neg_root_mean_squared_error")
+
+    models.append(linear)
+    models.append(ridge)
+    models.append(random_forest)
+
+    results = []
+
+    for model in models:
+        model.fit(X, y)
+
+        if isinstance(model, GridSearchCV):
+            name = model.best_estimator_.steps[-1][0]
+            params = model.best_params_
+            y_pred = cross_val_predict(model.best_estimator_, X, y, cv=cv, n_jobs=-1)
+        else:
+            name = model.steps[-1][0]
+            params = None
+            y_pred = cross_val_predict(model, X, y, cv=cv, n_jobs=-1)
+
+        rmse = root_mean_squared_error(y, y_pred)
+        results.append((name, rmse, params, y_pred))
 
     for r in results:
-        print(f"RMSE of {r[0]}: {r[1]}")
+        print(f"RMSE of {r[0]}: {r[1]}. Best Params: {r[2]}")
 
     best = min(results, key=lambda r: r[1])
 
-    methods.test_regressor("trivial", y_test, best[2])
+    methods.test_regressor(filename, y, best[3])
     return
 
-def math(determine_best_instruct = False):
+def math(determine_best_instruct = False, concat = False):
     print("------- Started Math Pipeline -------")
     data = ds.load_math()
     
@@ -272,40 +326,68 @@ def math(determine_best_instruct = False):
 
     results = []
 
-    preproc_data = preproc.get_detailed_input(data, best_instruct)
-    embeddings = methods.e5_embed(preproc_data)
+    if (concat == False):
+        preproc_data = preproc.get_detailed_input(data, best_instruct)
+        embeddings = methods.e5_embed(preproc_data)
+    else:
+        preproc_data = preproc.get_detailed_input_concat(data, best_instruct)
+        embeddings = methods.e5_embed_concat(preproc_data)
     X,y = preproc.create_embedding_difficulty_tuple(embeddings, data)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+
+    cv = KFold(n_splits=5, shuffle=True, random_state=42)
+
+    filename = "neuroips"
+    if(concat):
+        filename = "neuroips_concat"
 
     ds.analyse_training_data("neuroips", y_train)
     
     # Linear Regression
-    linear = LinearRegression().fit(X_train, y_train)
-    y_pred_linear = linear.predict(X_test)
-    rmse_linear = root_mean_squared_error(y_test, y_pred_linear)
-
-    results.append(("Linear Regression", rmse_linear, y_pred_linear))
+    models = []
+    linear = make_pipeline(LinearRegression())
 
     # Ridge Regression
-    ridge = Ridge().fit(X_train, y_train)
-    y_pred_ridge = ridge.predict(X_test)
-    rmse_ridge = root_mean_squared_error(y_test, y_pred_ridge)
+    ridge_grid = {
+        'ridge__alpha': [0.000001, 0.00001, 0.0001, 0.1]
+    }
 
-    results.append(("Ridge Regression", rmse_ridge, y_pred_ridge))
+    ridge = GridSearchCV(make_pipeline(Ridge()), ridge_grid, cv=cv, scoring="neg_root_mean_squared_error")
 
-    # RandomForest Regression
-    random_forest = RandomForestRegressor().fit(X_train, y_train)
-    y_pred_random_forest = random_forest.predict(X_test)
-    rmse_random_forest = root_mean_squared_error(y_test, y_pred_random_forest)
+    # Random Forest Regression
+    random_forest_grid = {
+        'randomforestregressor__n_estimators': [10, 20, 30, 50, 100, 200]
+    }
 
-    results.append(("RandomForest Regression", rmse_random_forest, y_pred_random_forest))
+    random_forest = GridSearchCV(make_pipeline(RandomForestRegressor(n_jobs=-1)), random_forest_grid , cv=cv, scoring="neg_root_mean_squared_error")
+
+    models.append(linear)
+    models.append(ridge)
+    models.append(random_forest)
+
+    results = []
+
+    for model in models:
+        model.fit(X, y)
+
+        if isinstance(model, GridSearchCV):
+            name = model.best_estimator_.steps[-1][0]
+            params = model.best_params_
+            y_pred = cross_val_predict(model.best_estimator_, X, y, cv=cv, n_jobs=-1)
+        else:
+            name = model.steps[-1][0]
+            params = None
+            y_pred = cross_val_predict(model, X, y, cv=cv, n_jobs=-1)
+
+        rmse = root_mean_squared_error(y, y_pred)
+        results.append((name, rmse, params, y_pred))
 
     for r in results:
-        print(f"RMSE of {r[0]}: {r[1]}")
+        print(f"RMSE of {r[0]}: {r[1]}. Best Params: {r[2]}")
 
     best = min(results, key=lambda r: r[1])
 
-    methods.test_regressor("neuroips", y_test, best[2])
+    methods.test_regressor(filename, y, best[3])
     return
 
 def language(determine_best_instruct = False):

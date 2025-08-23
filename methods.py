@@ -46,7 +46,38 @@ def e5_embed(data: list[str]) -> list:
     embeddings = _MODEL.encode(data, convert_to_tensor=True, normalize_embeddings=True)
     embeddings = embeddings.cpu()
 
-    print(f'Embedded {len(embeddings)} items.')
+    print(f'Embedded {len(embeddings)} items. Embedding Dimension: {len(embeddings[0])}')
+    print("\n")
+
+    return embeddings
+
+def e5_embed_concat(data: list[list[str]]) -> list:
+    """
+    Handles the e5 embedding process
+
+    Parameters
+    ----------
+    data: list[list[str]]
+        - A list containing lists of the split texts that should be embedded
+
+    Returns
+    -------
+    list
+        - The embeddings
+    """
+    embeddings = []
+
+    for i in data:
+        question_embedding = _MODEL.encode(i[0], convert_to_tensor=True, normalize_embeddings=True)
+        question_embedding = question_embedding.cpu()
+        correct_choice_embedding = _MODEL.encode(i[1], convert_to_tensor=True, normalize_embeddings=True)
+        correct_choice_embedding = correct_choice_embedding.cpu()
+        possible_choices_embedding = _MODEL.encode(i[2], convert_to_tensor=True, normalize_embeddings=True)
+        possible_choices_embedding = possible_choices_embedding.cpu()
+        embedding = torch.cat((question_embedding, correct_choice_embedding, possible_choices_embedding), dim=-1)
+        embeddings.append(embedding)
+
+    print(f'Embedded {len(embeddings)} items. Embedding Dimension: {len(embeddings[0])}')
     print("\n")
 
     return embeddings
