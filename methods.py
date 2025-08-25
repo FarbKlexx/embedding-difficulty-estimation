@@ -110,7 +110,7 @@ def baseline_regressor(y_train: list, y_test: list) -> float:
     
     return rmse
 
-def test_regressor(file_prefix: str, y_test: list, y_pred: list) -> tuple:
+def test_regressor(file_prefix: str, y_test, y_pred, rmse_mean, rmse_std) -> tuple:
     """
     Outputs the RMSE and R2-Score for the regressor
 
@@ -130,9 +130,9 @@ def test_regressor(file_prefix: str, y_test: list, y_pred: list) -> tuple:
     """
     rmse = root_mean_squared_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
-    
-    print('RMSE for Regressor: ' + str(rmse))
-    print('R2-Score for Regressor: ' + str(r2))
+
+    print(f'RMSE for Regressor: {rmse:.6f} (mean {rmse_mean:.6f} ± {rmse_std:.6f})')
+    print(f'R2-Score for Regressor: {r2:.6f}')
     print("\n")
     
     # # Defining the fonts before plotting:
