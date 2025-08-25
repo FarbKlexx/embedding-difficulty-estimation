@@ -19,24 +19,20 @@ def bea_reproduction(determine_best_instruct = False, concat = False):
     data = ds.load_medicine()
     ds.analyze_dataset(data)
 
-    # the following instruct variations are generated with chatgpt 
-    # Prompt: "the following phrase is the instruction for an multilingual-e5-large-instruct embedding: 
-    # TEMP_TASK_BEA = 'Given a multiple choice question from the United States Medical Licensing Examination, estimate the difficulty on a scale from 0 (very hard) to 1.5 (very easy).'
-    # give me 9 more semantically similar variations of this phrase."
-
+    
     # Best Instruct
     if (determine_best_instruct == True):
         INSTRUCTS = ["",
-                     "Given a multiple choice question from the United States Medical Licensing Examination, estimate the difficulty on a scale from 0 (very hard) to 1.5 (very easy).",
-                    "Given a multiple-choice question from the US Medical Licensing Examination, predict its difficulty on a scale from 0 (very difficult) to 1.5 (very easy).",
-                    "For the following USMLE multiple-choice question, estimate the ease of answering on a scale of 0 (hardest) to 1.5 (easiest).",
-                    "Assess the difficulty of the provided USMLE multiple-choice question, scoring from 0 (extremely hard) to 1.5 (extremely easy).",
-                    "Given a US Medical Licensing Examination multiple-choice question, assign a difficulty score between 0 (most difficult) and 1.5 (least difficult).",
-                    "Evaluate the difficulty level of the given USMLE question using a scale where 0 = very hard and 1.5 = very easy.",
-                    "Given a multiple-choice question from the United States Medical Licensing Examination, rate its difficulty from 0 (hardest) to 1.5 (easiest).",
-                    "Score the difficulty of the following USMLE question on a scale ranging from 0 (maximum difficulty) to 1.5 (minimum difficulty).",
-                    "Given a multiple-choice question from the US Medical Licensing Examination, determine its difficulty rating between 0 (very challenging) and 1.5 (very simple).",
-                    "Estimate the difficulty of this USMLE multiple-choice question, using 0 as the hardest possible score and 1.5 as the easiest."]
+                     "Given a multiple choice question from the United States Medical Licensing Examination, estimate the difficulty on a scale from 0 (very easy) to 1.5 (very hard).",
+                    "Given a multiple-choice question from the US Medical Licensing Examination, predict its difficulty on a scale from 0 (very easy) to 1.5 (very difficult).",
+                    "For the following USMLE multiple-choice question, estimate the ease of answering on a scale of 0 (easiest) to 1.5 (hardest).",
+                    "Assess the difficulty of the provided USMLE multiple-choice question, scoring from 0 (extremely easy) to 1.5 (extremely hard).",
+                    "Given a US Medical Licensing Examination multiple-choice question, assign a difficulty score between 0 (least difficult) and 1.5 (most difficult).",
+                    "Evaluate the difficulty level of the given USMLE question using a scale where 0 = very easy and 1.5 = very hard.",
+                    "Given a multiple-choice question from the United States Medical Licensing Examination, rate its difficulty from 0 (easiest) to 1.5 (hardest).",
+                    "Score the difficulty of the following USMLE question on a scale ranging from 0 (minimum difficulty) to 1.5 (maximum difficulty).",
+                    "Given a multiple-choice question from the US Medical Licensing Examination, determine its difficulty rating between 0 (very simple) and 1.5 (very challenging).",
+                    "Estimate the difficulty of this USMLE multiple-choice question, using 0 as the easiest possible score and 1.5 as the hardest."]
         
         best = ("",100)
 
@@ -65,12 +61,12 @@ def bea_reproduction(determine_best_instruct = False, concat = False):
                 best = (i,mean_rmse)
 
         print(f"The best performing Instruct is '{best[0]}' with an average RMSE of {best[1]}.\n")
-    
+
     if (determine_best_instruct == True):
         best_instruct = best[0]
     else:
         # this was determined from the code above. Use determine_best_instruct if you want to confirm this claim (Long runtime even on GPU).
-        best_instruct = "Given a multiple choice question from the United States Medical Licensing Examination, estimate the difficulty on a scale from 0 (very hard) to 1.5 (very easy)."  
+        best_instruct = "Given a multiple-choice question from the United States Medical Licensing Examination, rate its difficulty from 0 (easiest) to 1.5 (hardest)."  
 
     # Best Regressor
 
@@ -80,6 +76,7 @@ def bea_reproduction(determine_best_instruct = False, concat = False):
     else:
         preproc_data = preproc.get_detailed_input_concat(data, best_instruct)
         embeddings = methods.e5_embed_concat(preproc_data)
+    
     X,y = preproc.create_embedding_difficulty_tuple(embeddings, data)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
 
@@ -143,11 +140,6 @@ def trivial(determine_best_instruct = False, concat = False):
 
     data = ds.load_trivial()
     ds.analyze_dataset(data)
-
-    # the following instruct variations are generated with chatgpt 
-    # Prompt: "the following phrase is the instruction for an multilingual-e5-large-instruct embedding: 
-    # TEMP_TASK_TRIVIAL = 'Given a multiple choice question, estimate the difficulty on a scale from 0 (very hard) to 1 (very easy).' 
-    # give me 9 more semantically similar variations of this phrase."
 
     # Best Instruct
     if (determine_best_instruct == True):
@@ -269,10 +261,6 @@ def math(determine_best_instruct = False, concat = False):
     data = ds.load_math()
     
     ds.analyze_dataset(data)
-    # the following instruct variations are generated with chatgpt 
-    # Prompt: "the following phrase is the instruction for an multilingual-e5-large-instruct embedding: 
-    # TEMP_TASK_MATH = 'Given a multiple choice question from a math exam, estimate the difficulty on a scale from 0 (very hard) to 1 (very easy).'
-    # give me 9 more semantically similar variations of this phrase."
 
     # Best Instruct
     if (determine_best_instruct == True):
@@ -405,11 +393,6 @@ def language(determine_best_instruct = False):
     y_pred_wl = ridge.predict(X_test_wl)
     methods.test_regressor("duolingo_wl", y_test_wl, y_pred_wl)
 
-    # the following instruct variations are generated with chatgpt 
-    # Prompt: "the following phrase is the instruction for an multilingual-e5-large-instruct embedding: 
-    # TEMP_TASK_LANGUAGE = 'Given a word to translate, estimate the difficulty on a scale from 0 (very hard) to 1 (very easy).'
-    # give me 9 more semantically similar variations of this phrase."
-
     # Best Instruct
     if (determine_best_instruct == True):
         INSTRUCTS = ["",
@@ -496,11 +479,4 @@ def language(determine_best_instruct = False):
     best = min(results, key=lambda r: r[1])
 
     methods.test_regressor("duolingo", y_test, best[2])
-    return
-
-# TODO add this to the other pipelines
-def concat(task: str):
-    
-    # pipeline should be the same but preproc differs
-
     return

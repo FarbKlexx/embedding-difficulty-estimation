@@ -13,6 +13,8 @@ from collections import defaultdict
 import pandas as pd
 import matplotlib.pyplot as plt
 import re
+from matplotlib.colors import Normalize, LinearSegmentedColormap
+import matplotlib.colorbar as cbar
 
 # Dynamic System Paths to the raw datasets
 
@@ -366,7 +368,7 @@ def analyze_dataset(data: list):
 
 def analyse_training_data(file_prefix: str, y_train: list):
     
-    # # Defining the fonts before plotting:
+    # Defining the fonts before plotting
     plt.rcParams.update({
         'font.family': 'Courier New',  # monospace font
         'font.size': 20,
@@ -377,27 +379,40 @@ def analyse_training_data(file_prefix: str, y_train: list):
         'legend.fontsize': 20,
         'figure.titlesize': 20
     }) 
-    
+
     fig, ax = plt.subplots(figsize=(10, 10))
-    
+
     ax.grid(True, which='major', linestyle='-', linewidth=0.75, alpha=0.25)
-    
     ax.minorticks_on()
     ax.grid(True, which='minor', linestyle='-', linewidth=0.25, alpha=0.15)
-    
-    ax.set_axisbelow(True) # <-- Ensure grid is below data
-    
+    ax.set_axisbelow(True)  # Ensure grid is below data
+
     plt.title('Difficulty Distribution')
     ax.set_xlabel('Difficulty')
     ax.set_ylabel('Amount')
-    
-    plt.hist(y_train, bins=100)
-    
-    filename = f"{file_prefix}-difficulty-distribution.svg"
 
+    cmap = LinearSegmentedColormap.from_list("custom", ['#9671bd', '#77b5b6'])
+    cmap_edges = LinearSegmentedColormap.from_list("custom_edges", ['#6a408d', '#378d94'])
+
+    counts, bins, patches = ax.hist(y_train, bins=50, edgecolor="black", linewidth=0.3)
+
+    bin_centers = 0.5 * (bins[:-1] + bins[1:])
+    norm = Normalize(vmin=min(y_train), vmax=max(y_train))
+
+    for center, patch in zip(bin_centers, patches):
+        patch.set_facecolor(cmap(norm(center)))
+        patch.set_edgecolor(cmap_edges(norm(center)))
+
+    sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
+    sm.set_array([])
+
+    cbar = plt.colorbar(sm, ax=ax, orientation="horizontal", pad=0.1, aspect=30)
+    cbar.set_label("Difficulty Scale (Harder to Easier)")
+    cbar.ax.tick_params(labelsize=16)
+
+    filename = f"{file_prefix}-difficulty-distribution.svg"
     PATH = os.path.join("img", filename)
 
     plt.savefig(PATH, format="svg")
-    
     plt.show()
     return
